@@ -128,3 +128,52 @@ export const startGame = async (code: string, rounds: number, players: Player[])
     players: resetPlayers
   });
 };
+
+export const castVote = async (code: string, userId: string, targetId: string) => {
+  const roomRef = ref(db, 'rooms/' + code);
+  
+  await runTransaction(roomRef, (room: RoomState) => {
+    if (!room) return room;
+
+    // Update the vote for the user
+    if (room.players) {
+      room.players = room.players.map(p => 
+        p.id === userId ? { ...p, voteTargetId: targetId } : p
+      );
+    }
+
+    // Check if everyone has voted
+    const allVoted = room.players.every(p => p.voteTargetId !== null);
+
+    if (allVoted) {
+      const voteCounts: Record<string, number> = {};
+      room.players.forEach(p => {
+        if (p.voteTargetId) voteCounts[p.voteTargetId] = (voteCounts[p.voteTargetId] || 0) + 1;
+      });
+
+      let maxVotes = 0;
+      let votedOutId = '';
+      let tie = false;
+
+      Object.entries(voteCounts).forEach(([pid, count]) => {
+        if (count > maxVotes) {
+          maxVotes = count;
+          votedOutId = pid;
+          tie = false;
+        } else if (count === maxVotes) {
+          tie = true; // Tie means crew failed to agree
+        }
+      });
+
+      // Imposter wins if:
+      // 1. They were NOT the one voted out.
+      // 2. OR there was a tie (Crew confusion wins it for Imposter).
+      const imposterCaught = !tie && votedOutId === room.imposterId;
+      
+      room.winner = imposterCaught ? 'CREW' : 'IMPOSTER';
+      room.stage = GameStage.RESULTS;
+    }
+
+    return room;
+  });
+};

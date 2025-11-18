@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- PWA & Mobile Meta Tags -->
     <title>Imposter</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -29,18 +38,27 @@
       }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
-  }
-}
-</script>
-</head>
-  <body class="bg-surface text-ink font-sans antialiased overflow-x-hidden h-screen w-screen">
-    <div id="root" class="h-full w-full"></div>
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+      }
+    }
+    </script>
+  </head>
+  <!-- 
+    fixed inset-0: Locks the body size to the viewport
+    overflow-hidden: Prevents browser scrollbars/bounce
+    select-none: Prevents text highlighting
+    touch-pan-y: Allows vertical gestures only where explicitly handled
+  -->
+  <body class="bg-surface text-ink font-sans antialiased fixed inset-0 overflow-hidden select-none touch-pan-y overscroll-none">
+    <!-- 
+      h-full overflow-y-auto: Allows content to scroll internally if it's too long 
+    -->
+    <div id="root" class="h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain"></div>
   </body>
 </html>

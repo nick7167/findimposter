@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, update } from 'firebase/database';
-import { db, createRoom, joinRoom, startGame } from './services/firebase';
+import { db, createRoom, joinRoom, startGame, castVote } from './services/firebase';
 import { GameStage, RoomState } from './types';
 import { Button, Input, Card, Avatar } from './components/UI';
 
@@ -175,7 +175,9 @@ const App: React.FC = () => {
     
     if (allReady) {
       updates.stage = GameStage.GAME_LOOP;
-      updates.currentTurnPlayerId = updatedPlayers[0].id;
+      // Pick RANDOM start player
+      const randomStartPlayer = updatedPlayers[Math.floor(Math.random() * updatedPlayers.length)];
+      updates.currentTurnPlayerId = randomStartPlayer.id;
       updates.turnDeadline = Date.now() + 30000; 
     }
 
@@ -215,35 +217,8 @@ const App: React.FC = () => {
 
   const handleVote = async (targetId: string) => {
     if (!gameState || !db) return;
-
-    const updatedPlayers = gameState.players.map(p => 
-        p.id === userId ? { ...p, voteTargetId: targetId } : p
-    );
-
-    let updates: any = { players: updatedPlayers };
-    const allVoted = updatedPlayers.every(p => p.voteTargetId !== null);
-
-    if (allVoted) {
-        const voteCounts: Record<string, number> = {};
-        updatedPlayers.forEach(p => {
-            if (p.voteTargetId) voteCounts[p.voteTargetId] = (voteCounts[p.voteTargetId] || 0) + 1;
-        });
-
-        let maxVotes = 0;
-        let votedOutId = '';
-        Object.entries(voteCounts).forEach(([pid, count]) => {
-            if (count > maxVotes) {
-                maxVotes = count;
-                votedOutId = pid;
-            }
-        });
-
-        const imposterFound = votedOutId === gameState.imposterId;
-        updates.winner = imposterFound ? 'CREW' : 'IMPOSTER';
-        updates.stage = GameStage.RESULTS;
-    }
-
-    await update(ref(db, 'rooms/' + gameState.code), updates);
+    // Use Transaction function in firebase.ts
+    await castVote(gameState.code, userId, targetId);
   };
 
   const handlePlayAgain = async () => {
