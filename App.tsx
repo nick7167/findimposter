@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, update } from 'firebase/database';
-import { db, createRoom, joinRoom, startGame, castVote } from './services/firebase';
+import { db, createRoom, joinRoom, startGame, castVote, nextTurn } from './services/firebase';
 import { GameStage, RoomState } from './types';
 import { Button, Input, Card, Avatar } from './components/UI';
 
@@ -111,19 +112,18 @@ const App: React.FC = () => {
         const remaining = Math.max(0, Math.ceil((gameState.turnDeadline - Date.now()) / 1000));
         setTimeLeft(remaining);
 
-        // Auto-advance if I am the host OR the current player
+        // Auto-advance ONLY if I am the host. 
+        // This prevents multiple players triggering the transaction simultaneously.
         if (remaining === 0) {
-            const isMyTurn = gameState.currentTurnPlayerId === userId;
             const isHost = gameState.players.find(p => p.id === userId)?.isHost;
-            
-            if (isMyTurn || isHost) {
+            if (isHost) {
                handleNextTurn();
             }
         }
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [gameState?.stage, gameState?.turnDeadline, gameState?.currentTurnPlayerId, userId]);
+  }, [gameState?.stage, gameState?.turnDeadline, userId]); // Removed currentTurnPlayerId from dependencies to avoid frequent re-renders
 
 
   // --- Action Handlers ---
@@ -186,38 +186,12 @@ const App: React.FC = () => {
 
   const handleNextTurn = async () => {
     if (!gameState || !db) return;
-    
-    const currentPlayerIdx = gameState.players.findIndex(p => p.id === gameState.currentTurnPlayerId);
-    if (currentPlayerIdx === -1) return; 
-
-    let nextIdx = currentPlayerIdx + 1;
-    let nextRound = gameState.currentRound;
-    let stage = gameState.stage;
-    let deadline = Date.now() + 30000;
-
-    // Check if round is over
-    if (nextIdx >= gameState.players.length) {
-        nextIdx = 0;
-        nextRound++;
-    }
-
-    // Check if game is over
-    if (nextRound > gameState.roundsTotal) {
-        stage = GameStage.VOTING;
-        deadline = 0;
-    }
-
-    await update(ref(db, 'rooms/' + gameState.code), {
-        currentTurnPlayerId: gameState.players[nextIdx].id,
-        currentRound: nextRound,
-        stage: stage,
-        turnDeadline: deadline
-    });
+    // Use transaction-based nextTurn to prevent race conditions and ensure turnCount is accurate
+    await nextTurn(gameState.code, gameState.turnCount || 0);
   };
 
   const handleVote = async (targetId: string) => {
     if (!gameState || !db) return;
-    // Use Transaction function in firebase.ts
     await castVote(gameState.code, userId, targetId);
   };
 
@@ -366,7 +340,7 @@ const App: React.FC = () => {
 
             {isHost ? <RoundsSelector /> : (
                 <div className="mt-6 py-6 text-center text-slate-400 font-bold animate-pulse">
-                    Venter på at værten starter...
+                    Venter på de andre...
                 </div>
             )}
         </div>
@@ -440,7 +414,7 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto">
              <h2 className="text-3xl font-black text-slate-700 mb-2 text-center mt-8">Stem!</h2>
-             <p className="text-slate-400 font-bold text-center mb-8">Hvem er Bedrageren?</p>
+             <p className="text-slate-400 font-bold text-center mb-8">Hvem er Imposteren?</p>
 
              <div className="grid grid-cols-2 gap-4">
                 {gameState.players.map(player => {
@@ -481,14 +455,14 @@ const App: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto ${crewWon ? 'bg-primary' : 'bg-danger'}`}>
             <div className="text-white text-center mb-8">
-                <h1 className="text-5xl font-black mb-2">{crewWon ? 'MANDSKABET VANDT!' : 'BEDRAGEREN VANDT!'}</h1>
+                <h1 className="text-5xl font-black mb-2">{crewWon ? 'MANDSKABET VANDT!' : 'IMPOSTEREN VANDT!'}</h1>
                 <p className="font-bold text-white/80 text-xl">
-                    {crewWon ? 'Bedrageren blev fanget.' : 'Bedrageren slap væk.'}
+                    {crewWon ? 'Imposteren blev fanget.' : 'Imposteren slap væk.'}
                 </p>
             </div>
 
             <Card className="w-full mb-6 text-center">
-                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Bedrageren var</div>
+                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Imposteren var</div>
                 <div className="text-2xl font-black text-slate-800 mb-6">{imposterName}</div>
                 
                 <div className="w-full h-0.5 bg-slate-100 mb-6"></div>
@@ -534,10 +508,10 @@ const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isRead
                                 Kategori: {gameState.category}
                             </div>
                             <div className="text-white font-black text-4xl mb-4">
-                                {isImposter ? 'BEDRAGER' : gameState.secretWord}
+                                {isImposter ? 'IMPOSTER' : gameState.secretWord}
                             </div>
                             <div className="text-white/90 font-bold text-sm">
-                                {isImposter ? 'Fald i ét med mængden. Bliv ikke fanget.' : 'Find bedrageren.'}
+                                {isImposter ? 'Fald i ét med mængden. Bliv ikke fanget.' : 'Find imposteren.'}
                             </div>
                         </>
                     )}

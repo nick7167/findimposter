@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getDatabase, 
@@ -55,6 +56,7 @@ export const createRoom = async (hostName: string, userId: string): Promise<stri
     players: [hostPlayer],
     roundsTotal: 1,
     currentRound: 1,
+    turnCount: 0,
     category: '',
     secretWord: '',
     imposterId: '',
@@ -122,10 +124,54 @@ export const startGame = async (code: string, rounds: number, players: Player[])
     stage: GameStage.REVEAL,
     roundsTotal: rounds,
     currentRound: 1,
+    turnCount: 0,
     category,
     secretWord,
     imposterId,
     players: resetPlayers
+  });
+};
+
+export const nextTurn = async (code: string, previousTurnCount: number) => {
+  const roomRef = ref(db, 'rooms/' + code);
+  await runTransaction(roomRef, (room: RoomState) => {
+    if (!room) return room;
+
+    // Idempotency check: If the turn has already advanced (server > client), ignore this request.
+    // This prevents double-skipping if multiple clients trigger nextTurn simultaneously.
+    if ((room.turnCount || 0) > previousTurnCount) {
+      return room;
+    }
+    
+    const playerCount = room.players.length;
+    const maxTurns = playerCount * room.roundsTotal;
+    const newTurnCount = (room.turnCount || 0) + 1;
+    
+    // Check if Game Over (Voting)
+    // Example: 3 players, 1 round. Max 3 turns.
+    // Turn 1 -> 2 -> 3. After 3rd turn finishes (count becomes 3), we go to Voting.
+    if (newTurnCount >= maxTurns) {
+       room.stage = GameStage.VOTING;
+       room.turnDeadline = 0;
+       room.turnCount = newTurnCount;
+       return room;
+    }
+    
+    // Determine next player
+    // We need to find the index of currentTurnPlayerId to know who is next
+    const currentIdx = room.players.findIndex(p => p.id === room.currentTurnPlayerId);
+    if (currentIdx === -1) return room; // Should not happen
+
+    const nextIdx = (currentIdx + 1) % playerCount;
+    const nextPlayerId = room.players[nextIdx].id;
+    
+    room.currentTurnPlayerId = nextPlayerId;
+    // Round is 1-based. 0-2 is Round 1. 3-5 is Round 2.
+    room.currentRound = Math.floor(newTurnCount / playerCount) + 1;
+    room.turnCount = newTurnCount;
+    room.turnDeadline = Date.now() + 30000;
+    
+    return room;
   });
 };
 
@@ -143,7 +189,8 @@ export const castVote = async (code: string, userId: string, targetId: string) =
     }
 
     // Check if everyone has voted
-    const allVoted = room.players.every(p => p.voteTargetId !== null);
+    // Strict check: key must exist and be a non-empty string.
+    const allVoted = room.players.every(p => typeof p.voteTargetId === 'string' && p.voteTargetId.length > 0);
 
     if (allVoted) {
       const voteCounts: Record<string, number> = {};

@@ -23,6 +23,7 @@ export interface RoomState {
   players: Player[];
   roundsTotal: number;
   currentRound: number;
+  turnCount: number; // Total turns taken in the game so far
   category: string;
   secretWord: string;
   imposterId: string; // The ID of the imposter
@@ -37,6 +38,7 @@ export const INITIAL_ROOM_STATE: RoomState = {
   players: [],
   roundsTotal: 1,
   currentRound: 1,
+  turnCount: 0,
   category: '',
   secretWord: '',
   imposterId: '',
