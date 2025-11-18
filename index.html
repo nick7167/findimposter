@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Imposter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#58cc02', // Duolingo Green
+              primaryDark: '#46a302',
+              secondary: '#1cb0f6', // Duolingo Blue
+              secondaryDark: '#1185bc',
+              danger: '#ff4b4b', // Duolingo Red
+              dangerDark: '#d33131',
+              surface: '#f7f7f7',
+              card: '#ffffff',
+              ink: '#3c3c3c',
+              subtle: '#afafaf'
+            },
+            fontFamily: {
+              sans: ['Nunito', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-surface text-ink font-sans antialiased overflow-x-hidden h-screen w-screen">
+    <div id="root" class="h-full w-full"></div>
+  </body>
+</html>

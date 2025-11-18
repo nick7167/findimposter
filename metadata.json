@@ -1,0 +1,5 @@
+{
+  "name": "Imposter - Social Deduction Game",
+  "description": "A multiplayer social deduction game inspired by Spyfall. Find the imposter before time runs out! Built with React, Tailwind, and Firebase.",
+  "requestFramePermissions": []
+}
