@@ -30,7 +30,7 @@ const RoomCodeDisplay = ({ code }: { code: string }) => {
       className="w-full bg-surface border-b-4 border-slate-200 active:border-b-0 active:translate-y-1 p-4 rounded-2xl flex flex-col items-center justify-center transition-all hover:bg-slate-50 group relative overflow-hidden"
     >
       <span className={`text-xs font-black uppercase tracking-wider mb-1 transition-colors ${copied ? 'text-green-500' : 'text-slate-400 group-hover:text-secondary'}`}>
-        {copied ? 'Copied to Clipboard!' : 'Room Code (Tap to Copy)'}
+        {copied ? 'Kopieret til Udklipsholder!' : 'Rumkode (Tryk for at kopiere)'}
       </span>
       <span className={`text-5xl font-black tracking-widest font-mono transition-colors ${copied ? 'text-green-500' : 'text-slate-700'}`}>
         {code}
@@ -92,13 +92,13 @@ const App: React.FC = () => {
         setGameState(null);
         // Only clear code if we were expecting a valid room
         if (activeRoomCode) {
-            setError("Room not found or closed.");
+            setError("Rummet blev ikke fundet eller er lukket.");
             setActiveRoomCode('');
         }
       }
     }, (err) => {
         console.error("Firebase subscription error:", err);
-        setError("Connection lost. Reconnecting...");
+        setError("Forbindelse tabt. Genopretter...");
     });
 
     return () => unsubscribe();
@@ -129,8 +129,8 @@ const App: React.FC = () => {
   // --- Action Handlers ---
 
   const handleCreate = async () => {
-    if (!nickname) return setError("Enter a nickname!");
-    if (!db) return setError("Firebase not configured.");
+    if (!nickname) return setError("Indtast et kaldenavn!");
+    if (!db) return setError("Firebase er ikke konfigureret.");
     setLoading(true);
     try {
       const code = await createRoom(nickname, userId);
@@ -138,14 +138,14 @@ const App: React.FC = () => {
       setError('');
     } catch (err) {
       console.error(err);
-      setError("Failed to create room.");
+      setError("Kunne ikke oprette rum.");
     }
     setLoading(false);
   };
 
   const handleJoin = async () => {
-    if (!nickname || !roomCodeInput) return setError("Enter name and code!");
-    if (!db) return setError("Firebase not configured.");
+    if (!nickname || !roomCodeInput) return setError("Indtast navn og kode!");
+    if (!db) return setError("Firebase er ikke konfigureret.");
     setLoading(true);
     try {
       const codeUpper = roomCodeInput.toUpperCase();
@@ -154,7 +154,7 @@ const App: React.FC = () => {
       setRoomCodeInput(''); // Clear input on success
       setError('');
     } catch (err: any) {
-      setError(err.message || "Failed to join.");
+      setError(err.message || "Kunne ikke deltage.");
     }
     setLoading(false);
   };
@@ -243,9 +243,9 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center">
             <div className="bg-red-50 border-2 border-red-100 p-6 rounded-3xl mb-6">
-                <h1 className="text-2xl font-black text-danger mb-2">Config Missing</h1>
+                <h1 className="text-2xl font-black text-danger mb-2">Konfiguration Mangler</h1>
                 <p className="text-slate-600 font-bold">
-                    Firebase is not configured. Please open <code className="bg-white px-2 py-1 rounded border border-slate-200 mx-1 text-sm">services/firebase.ts</code> and paste your configuration keys.
+                    Firebase er ikke konfigureret. Åbn <code className="bg-white px-2 py-1 rounded border border-slate-200 mx-1 text-sm">services/firebase.ts</code> og indsæt dine nøgler.
                 </p>
             </div>
         </div>
@@ -260,16 +260,16 @@ const App: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto">
         <div className="mb-12 text-center">
           <h1 className="text-5xl font-black text-primary tracking-tight mb-2">Imposter</h1>
-          <p className="text-slate-400 font-bold text-lg">Find the spy among us.</p>
+          <p className="text-slate-400 font-bold text-lg">Find spionen iblandt os.</p>
         </div>
 
         {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 font-bold text-center w-full">{error}</div>}
 
         <Card className="w-full space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-wider">Nickname</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-wider">Kaldenavn</label>
             <Input 
-                placeholder="Enter your name" 
+                placeholder="Indtast dit navn" 
                 value={nickname} 
                 onChange={e => setNickname(e.target.value)} 
                 maxLength={12}
@@ -277,17 +277,17 @@ const App: React.FC = () => {
           </div>
 
           <div className="pt-4">
-             <Button fullWidth onClick={handleCreate} disabled={loading}>Create Room</Button>
+             <Button fullWidth onClick={handleCreate} disabled={loading}>Opret Rum</Button>
           </div>
           
           <div className="relative flex items-center py-2">
             <div className="flex-grow border-t-2 border-slate-200"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-300 font-black text-sm">OR</span>
+            <span className="flex-shrink-0 mx-4 text-slate-300 font-black text-sm">ELLER</span>
             <div className="flex-grow border-t-2 border-slate-200"></div>
           </div>
 
           <div className="space-y-2">
-             <label className="text-xs font-black text-slate-400 uppercase tracking-wider">Room Code</label>
+             <label className="text-xs font-black text-slate-400 uppercase tracking-wider">Rumkode</label>
              <Input 
                  placeholder="X Y Z A" 
                  className="uppercase text-center tracking-[0.5em] font-black text-2xl h-16 placeholder-slate-300"
@@ -295,7 +295,7 @@ const App: React.FC = () => {
                  onChange={e => setRoomCodeInput(e.target.value.toUpperCase())}
                  maxLength={4}
              />
-             <Button variant="secondary" fullWidth onClick={handleJoin} disabled={loading}>Join Room</Button>
+             <Button variant="secondary" fullWidth onClick={handleJoin} disabled={loading}>Deltag</Button>
           </div>
         </Card>
       </div>
@@ -312,7 +312,7 @@ const App: React.FC = () => {
         return (
             <div className="mt-6 space-y-4 bg-white p-4 rounded-t-3xl border-t-2 border-slate-100 shadow-lg">
                 <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-500">Rounds</span>
+                <span className="font-bold text-slate-500">Runder</span>
                 <div className="flex space-x-2">
                     {[1, 2, 3].map(r => (
                         <button 
@@ -330,7 +330,7 @@ const App: React.FC = () => {
                 onClick={() => handleStartGame(rounds)}
                 disabled={gameState.players.length < 3}
                 >
-                {gameState.players.length < 3 ? `Need ${3 - gameState.players.length} More` : 'Start Game'}
+                {gameState.players.length < 3 ? `Mangler ${3 - gameState.players.length} Mere` : 'Start Spil'}
                 </Button>
             </div>
         )
@@ -339,7 +339,12 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto">
             <div className="flex justify-between items-center mb-6">
-                <button onClick={handleLeave} className="text-slate-400 font-bold text-sm hover:text-danger">Exit</button>
+                <button 
+                    onClick={handleLeave} 
+                    className="bg-red-100 text-red-600 border-b-4 border-red-200 hover:bg-red-200 font-extrabold text-xs uppercase tracking-wider py-3 px-5 rounded-2xl transition-all active:border-b-0 active:translate-y-1"
+                >
+                    Forlad
+                </button>
             </div>
             
             <h2 className="text-center text-slate-400 font-bold text-sm uppercase tracking-wider mb-2">Lobby</h2>
@@ -349,19 +354,19 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex-grow space-y-3">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider ml-2">Players ({gameState.players.length})</h3>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider ml-2">Spillere ({gameState.players.length})</h3>
                 {gameState.players.map(player => (
                     <div key={player.id} className="flex items-center bg-white p-3 rounded-2xl border-2 border-slate-100 shadow-sm">
                         <Avatar name={player.name} size="sm" />
                         <span className="ml-3 font-bold text-slate-700">{player.name}</span>
-                        {player.isHost && <span className="ml-auto text-xs font-bold bg-yellow-100 text-yellow-600 px-2 py-1 rounded-lg">HOST</span>}
+                        {player.isHost && <span className="ml-auto text-xs font-bold bg-yellow-100 text-yellow-600 px-2 py-1 rounded-lg">VÆRT</span>}
                     </div>
                 ))}
             </div>
 
             {isHost ? <RoundsSelector /> : (
                 <div className="mt-6 py-6 text-center text-slate-400 font-bold animate-pulse">
-                    Waiting for host to start...
+                    Venter på at værten starter...
                 </div>
             )}
         </div>
@@ -389,10 +394,10 @@ const App: React.FC = () => {
         <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto relative">
              <div className="flex justify-between items-end mb-6">
                 <div className="bg-white border-2 border-slate-100 px-3 py-1 rounded-lg text-xs font-bold text-slate-400">
-                    Round {gameState.currentRound}/{gameState.roundsTotal}
+                    Runde {gameState.currentRound}/{gameState.roundsTotal}
                 </div>
                 <div className="text-right">
-                    <div className="text-xs font-bold text-slate-400 uppercase">Category</div>
+                    <div className="text-xs font-bold text-slate-400 uppercase">Kategori</div>
                     <div className="font-black text-slate-700">{gameState.category}</div>
                 </div>
              </div>
@@ -402,10 +407,10 @@ const App: React.FC = () => {
                     <Avatar name={currentPlayer?.name || '?'} size="lg" active />
                 </div>
                 <h2 className="text-3xl font-black text-slate-700 mb-2">
-                    {isMyTurn ? "It's your turn!" : `${currentPlayer?.name}'s Turn`}
+                    {isMyTurn ? "Det er din tur!" : `${currentPlayer?.name}'s Tur`}
                 </h2>
                 <p className="text-slate-400 font-bold text-center max-w-[200px]">
-                    {isMyTurn ? "Describe the word without giving it away." : "Listen carefully for clues."}
+                    {isMyTurn ? "Beskriv ordet uden at afsløre det." : "Lyt opmærksomt efter ledetråde."}
                 </p>
              </div>
 
@@ -422,7 +427,7 @@ const App: React.FC = () => {
                 disabled={!isMyTurn}
                 onClick={() => handleNextTurn()}
              >
-                {isMyTurn ? "Finish Turn" : `Waiting (${timeLeft}s)`}
+                {isMyTurn ? "Færdig" : `Venter (${timeLeft}s)`}
              </Button>
         </div>
     );
@@ -434,8 +439,8 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto">
-             <h2 className="text-3xl font-black text-slate-700 mb-2 text-center mt-8">Vote!</h2>
-             <p className="text-slate-400 font-bold text-center mb-8">Who is the Imposter?</p>
+             <h2 className="text-3xl font-black text-slate-700 mb-2 text-center mt-8">Stem!</h2>
+             <p className="text-slate-400 font-bold text-center mb-8">Hvem er Bedrageren?</p>
 
              <div className="grid grid-cols-2 gap-4">
                 {gameState.players.map(player => {
@@ -460,7 +465,7 @@ const App: React.FC = () => {
 
              {myVote && (
                  <div className="mt-8 text-center text-slate-400 font-bold animate-pulse">
-                     Waiting for other votes...
+                     Venter på de andre...
                  </div>
              )}
         </div>
@@ -476,29 +481,29 @@ const App: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto ${crewWon ? 'bg-primary' : 'bg-danger'}`}>
             <div className="text-white text-center mb-8">
-                <h1 className="text-5xl font-black mb-2">{crewWon ? 'CREW WINS!' : 'IMPOSTER WINS!'}</h1>
+                <h1 className="text-5xl font-black mb-2">{crewWon ? 'MANDSKABET VANDT!' : 'BEDRAGEREN VANDT!'}</h1>
                 <p className="font-bold text-white/80 text-xl">
-                    {crewWon ? 'The imposter was caught.' : 'The imposter escaped.'}
+                    {crewWon ? 'Bedrageren blev fanget.' : 'Bedrageren slap væk.'}
                 </p>
             </div>
 
             <Card className="w-full mb-6 text-center">
-                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">The Imposter Was</div>
+                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Bedrageren var</div>
                 <div className="text-2xl font-black text-slate-800 mb-6">{imposterName}</div>
                 
                 <div className="w-full h-0.5 bg-slate-100 mb-6"></div>
 
-                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">The Word Was</div>
+                <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Ordet var</div>
                 <div className="text-2xl font-black text-secondary">{gameState.secretWord}</div>
             </Card>
 
             {isHost ? (
                 <Button variant="secondary" fullWidth className="bg-white text-secondary border-slate-200 hover:bg-slate-50" onClick={handlePlayAgain}>
-                    Play Again
+                    Spil Igen
                 </Button>
             ) : (
                 <Button variant="ghost" fullWidth className="text-white/50 border-transparent hover:bg-black/10" onClick={handleLeave}>
-                    Exit
+                    Forlad
                 </Button>
             )}
         </div>
@@ -514,7 +519,7 @@ const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isRead
     
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto bg-slate-800">
-             <h2 className="text-white font-black text-3xl mb-8">Your Role</h2>
+             <h2 className="text-white font-black text-3xl mb-8">Din Rolle</h2>
              
              <div 
                 onClick={() => !isReady && setRevealed(!revealed)}
@@ -522,17 +527,17 @@ const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isRead
              >
                 <div className={`w-full h-full rounded-2xl border-4 flex flex-col items-center justify-center p-6 text-center transition-all duration-500 ${revealed ? (isImposter ? 'bg-danger border-dangerDark' : 'bg-primary border-primaryDark') : 'bg-slate-200 border-slate-300'}`}>
                     {!revealed ? (
-                        <div className="text-slate-400 font-black text-xl uppercase">Tap to Reveal</div>
+                        <div className="text-slate-400 font-black text-xl uppercase">Tryk for at se</div>
                     ) : (
                         <>
                             <div className="text-white/80 font-black text-sm uppercase tracking-widest mb-4">
-                                {isImposter ? 'Secret Mission' : `Category: ${gameState.category}`}
+                                Kategori: {gameState.category}
                             </div>
                             <div className="text-white font-black text-4xl mb-4">
-                                {isImposter ? 'IMPOSTER' : gameState.secretWord}
+                                {isImposter ? 'BEDRAGER' : gameState.secretWord}
                             </div>
                             <div className="text-white/90 font-bold text-sm">
-                                {isImposter ? 'Blend in. Don\'t get caught.' : 'Find the imposter.'}
+                                {isImposter ? 'Fald i ét med mængden. Bliv ikke fanget.' : 'Find bedrageren.'}
                             </div>
                         </>
                     )}
@@ -541,7 +546,7 @@ const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isRead
 
              <div className="w-full mt-8">
                 {isReady ? (
-                    <div className="text-center text-white/50 font-bold">Waiting for others...</div>
+                    <div className="text-center text-white/50 font-bold">Venter på de andre...</div>
                 ) : (
                     <Button 
                         fullWidth 
@@ -550,7 +555,7 @@ const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isRead
                         disabled={!revealed}
                         className={revealed ? "bg-white text-slate-800 border-slate-300 hover:bg-slate-100" : "text-white hover:bg-white/10"}
                     >
-                        I'm Ready
+                        Jeg er Klar
                     </Button>
                 )}
              </div>

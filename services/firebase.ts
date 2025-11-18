@@ -73,13 +73,13 @@ export const joinRoom = async (code: string, playerName: string, userId: string)
   const snapshot = await get(roomRef);
 
   if (!snapshot.exists()) {
-    throw new Error("Room not found");
+    throw new Error("Rummet findes ikke");
   }
 
   const room = snapshot.val() as RoomState;
   if (room.stage !== GameStage.LOBBY) {
     const existing = room.players?.find(p => p.id === userId);
-    if (!existing) throw new Error("Game already in progress");
+    if (!existing) throw new Error("Spillet er allerede i gang");
     return; // Already in
   }
 
