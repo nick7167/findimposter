@@ -45,6 +45,22 @@ const RoomCodeDisplay = ({ code }: { code: string }) => {
   );
 };
 
+// Subtle leave button component
+const QuitButton = ({ onClick, light = false }: { onClick: () => void; light?: boolean }) => (
+  <button
+    onClick={() => {
+      if (window.confirm("Er du sikker på, at du vil forlade spillet?")) {
+        onClick();
+      }
+    }}
+    className={`absolute top-6 right-6 text-xs font-black uppercase tracking-wider p-2 transition-colors z-50 ${
+      light ? 'text-white/40 hover:text-white' : 'text-slate-300 hover:text-danger'
+    }`}
+  >
+    Forlad
+  </button>
+);
+
 const App: React.FC = () => {
   const [userId] = useState(getUserId());
   const [nickname, setNickname] = useState(localStorage.getItem('imposter_name') || '');
@@ -161,7 +177,8 @@ const App: React.FC = () => {
 
   const handleStartGame = async (rounds: number) => {
     if (!gameState || !db) return;
-    await startGame(gameState.code, rounds, gameState.players);
+    // Pass current imposter ID to avoid repeating same player twice
+    await startGame(gameState.code, rounds, gameState.players, gameState.imposterId);
   };
 
   const handleToggleReady = async () => {
@@ -202,7 +219,8 @@ const App: React.FC = () => {
         players: gameState.players.map(p => ({ ...p, isReady: false, voteTargetId: null })),
         winner: null,
         category: '',
-        secretWord: ''
+        secretWord: '',
+        turnCount: 0
     });
   };
 
@@ -356,6 +374,7 @@ const App: React.FC = () => {
                 isImposter={isImposter} 
                 isReady={!!myPlayer?.isReady} 
                 onReady={handleToggleReady} 
+                onLeave={handleLeave}
            />;
   }
 
@@ -366,7 +385,8 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto relative">
-             <div className="flex justify-between items-end mb-6">
+             <QuitButton onClick={handleLeave} />
+             <div className="flex justify-between items-end mb-6 mt-8">
                 <div className="bg-white border-2 border-slate-100 px-3 py-1 rounded-lg text-xs font-bold text-slate-400">
                     Runde {gameState.currentRound}/{gameState.roundsTotal}
                 </div>
@@ -412,8 +432,9 @@ const App: React.FC = () => {
     const myVote = gameState.players.find(p => p.id === userId)?.voteTargetId;
 
     return (
-        <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto">
-             <h2 className="text-3xl font-black text-slate-700 mb-2 text-center mt-8">Stem!</h2>
+        <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto relative">
+             <QuitButton onClick={handleLeave} />
+             <h2 className="text-3xl font-black text-slate-700 mb-2 text-center mt-12">Stem!</h2>
              <p className="text-slate-400 font-bold text-center mb-8">Hvem er Imposteren?</p>
 
              <div className="grid grid-cols-2 gap-4">
@@ -453,8 +474,9 @@ const App: React.FC = () => {
     const crewWon = gameState.winner === 'CREW';
 
     return (
-        <div className={`min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto ${crewWon ? 'bg-primary' : 'bg-danger'}`}>
-            <div className="text-white text-center mb-8">
+        <div className={`min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto relative ${crewWon ? 'bg-primary' : 'bg-danger'}`}>
+            <QuitButton onClick={handleLeave} light />
+            <div className="text-white text-center mb-8 mt-12">
                 <h1 className="text-5xl font-black mb-2">{crewWon ? 'MANDSKABET VANDT!' : 'IMPOSTEREN VANDT!'}</h1>
                 <p className="font-bold text-white/80 text-xl">
                     {crewWon ? 'Imposteren blev fanget.' : 'Imposteren slap væk.'}
@@ -488,11 +510,18 @@ const App: React.FC = () => {
 };
 
 // Extracted to avoid hook rule issues in conditional renders
-const RevealScreen: React.FC<{ gameState: RoomState; isImposter: boolean; isReady: boolean; onReady: () => void }> = ({ gameState, isImposter, isReady, onReady }) => {
+const RevealScreen: React.FC<{ 
+  gameState: RoomState; 
+  isImposter: boolean; 
+  isReady: boolean; 
+  onReady: () => void;
+  onLeave: () => void;
+}> = ({ gameState, isImposter, isReady, onReady, onLeave }) => {
     const [revealed, setRevealed] = useState(false);
     
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto bg-slate-800">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto bg-slate-800 relative">
+             <QuitButton onClick={onLeave} light />
              <h2 className="text-white font-black text-3xl mb-8">Din Rolle</h2>
              
              <div 
