@@ -106,20 +106,9 @@ export const joinRoom = async (code: string, playerName: string, userId: string)
   });
 };
 
-export const startGame = async (code: string, rounds: number, players: Player[], previousImposterId?: string) => {
-  // Pick Imposter
-  let imposterIndex = Math.floor(Math.random() * players.length);
-  
-  // If we have more than 1 player and a previous imposter, try to pick someone else
-  // giving up after 5 attempts to avoid infinite loop in weird edge cases
-  if (players.length > 1 && previousImposterId) {
-    let attempts = 0;
-    while (players[imposterIndex].id === previousImposterId && attempts < 5) {
-      imposterIndex = Math.floor(Math.random() * players.length);
-      attempts++;
-    }
-  }
-
+export const startGame = async (code: string, rounds: number, players: Player[]) => {
+  // Pick Imposter - Purely Random
+  const imposterIndex = Math.floor(Math.random() * players.length);
   const imposterId = players[imposterIndex].id;
 
   // Pick Category/Word

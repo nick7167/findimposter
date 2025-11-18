@@ -177,8 +177,7 @@ const App: React.FC = () => {
 
   const handleStartGame = async (rounds: number) => {
     if (!gameState || !db) return;
-    // Pass current imposter ID to avoid repeating same player twice
-    await startGame(gameState.code, rounds, gameState.players, gameState.imposterId);
+    await startGame(gameState.code, rounds, gameState.players);
   };
 
   const handleToggleReady = async () => {
